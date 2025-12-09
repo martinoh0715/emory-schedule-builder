@@ -1,309 +1,658 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Emory Schedule Builder</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-            background-color: #f5f5f5;
-            height: 100vh;
-            overflow: hidden;
-        }
-        .app { display: flex; height: calc(100vh - 60px); }
-        .chat-panel {
-            width: 40%;
-            display: flex;
-            flex-direction: column;
-            background-color: white;
-            border-right: 2px solid #e0e0e0;
-        }
-        .top-header {
-            width: 100%;
-            background-color: #2c3e50;
-            color: #ffffff;
-            text-align: center;
-            padding: 12px 0;
-            font-size: 20px;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-        }
-        .chat-header { padding: 20px; background-color: #2c3e50; color: white; }
-        .chat-header h2 { font-size: 20px; font-weight: 600; }
-        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        .message { display: flex; margin-bottom: 8px; }
-        .message.user { justify-content: flex-end; }
-        .message.assistant { justify-content: flex-start; }
-        .message-bubble {
-            max-width: 75%;
-            padding: 12px 16px;
-            border-radius: 12px;
-            line-height: 1.5;
-            font-size: 14px;
-        }
-        .message.user .message-bubble {
-            background-color: #007bff;
-            color: white;
-            border-bottom-right-radius: 4px;
-        }
-        .message.assistant .message-bubble {
-            background-color: #e9ecef;
-            color: #333;
-            border-bottom-left-radius: 4px;
-        }
-        .chat-input-form {
-            display: flex;
-            padding: 20px;
-            border-top: 1px solid #e0e0e0;
-            background-color: #fafafa;
-        }
-        .chat-input {
-            flex: 1;
-            padding: 12px 16px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            font-size: 14px;
-            outline: none;
-        }
-        .send-button {
-            margin-left: 12px;
-            padding: 12px 24px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-        }
-        .send-button:hover { background-color: #0056b3; }
-        .send-button:disabled { background-color: #ccc; cursor: not-allowed; }
-        .schedule-panel {
-            width: 60%;
-            display: flex;
-            flex-direction: column;
-            background-color: white;
-        }
-        .schedule-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 20px 30px;
-            background-color: #34495e;
-            color: white;
-        }
-        .schedule-title { font-size: 22px; font-weight: 600; text-align: center; flex: 1; }
-        .nav-button {
-            background-color: transparent;
-            color: white;
-            border: 2px solid white;
-            border-radius: 6px;
-            padding: 8px 16px;
-            font-size: 18px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .nav-button:hover { background-color: rgba(255, 255, 255, 0.1); }
-        .calendar-view { flex: 1; overflow: auto; padding: 20px; }
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: 80px repeat(5, 1fr);
-            gap: 1px;
-            background-color: #ddd;
-            border: 1px solid #ddd;
-        }
-        .calendar-header-cell {
-            background-color: #34495e;
-            color: white;
-            padding: 12px;
-            text-align: center;
-            font-weight: 600;
-            font-size: 14px;
-        }
-        .time-cell {
-            background-color: #ecf0f1;
-            padding: 12px 8px;
-            text-align: center;
-            font-size: 12px;
-            font-weight: 500;
-            color: #555;
-        }
-        .calendar-cell { background-color: white; padding: 8px; min-height: 80px; }
-        .class-block {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 8px;
-            border-radius: 6px;
-            margin-bottom: 4px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        .class-code { font-weight: 700; font-size: 13px; margin-bottom: 4px; }
-        .class-name { font-size: 11px; margin-bottom: 4px; }
-        .class-time { font-size: 10px; opacity: 0.85; }
-        .loading { opacity: 0.6; font-style: italic; }
-    </style>
+  <meta charset="UTF-8" />
+  <title>Emory Course Planner</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- React + Babel (same setup as PMory) -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f3f4f6;
+      color: #111827;
+      min-height: 100vh;
+    }
+    .app-root {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    header {
+      padding: 1rem 2rem;
+      background: #111827;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    header h1 {
+      font-size: 1.3rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    header h1 span.logo-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: #22c55e;
+      box-shadow: 0 0 10px rgba(34,197,94,0.7);
+    }
+    .header-subtitle {
+      font-size: 0.85rem;
+      opacity: 0.8;
+    }
+
+    .main-layout {
+      flex: 1;
+      display: flex;
+      padding: 1.5rem;
+      gap: 1.5rem;
+    }
+
+    /* LEFT: chat */
+    .chat-panel {
+      flex: 3;
+      background: white;
+      border-radius: 1rem;
+      padding: 1.25rem;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    .chat-header {
+      margin-bottom: 0.75rem;
+    }
+    .chat-header-title {
+      font-weight: 600;
+      font-size: 1.05rem;
+    }
+    .chat-header-subtitle {
+      font-size: 0.85rem;
+      color: #6b7280;
+      margin-top: 0.25rem;
+    }
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0.75rem 0.25rem 0.75rem 0;
+      margin-top: 0.5rem;
+      border-top: 1px solid #e5e7eb;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .msg-row {
+      margin: 0.75rem 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .msg-row.user { align-items: flex-end; }
+    .msg-row.ai { align-items: flex-start; }
+    .msg-label {
+      font-size: 0.75rem;
+      margin-bottom: 0.25rem;
+      color: #6b7280;
+    }
+    .msg-bubble {
+      max-width: 75%;
+      padding: 0.75rem 1rem;
+      border-radius: 0.9rem;
+      font-size: 0.9rem;
+      line-height: 1.5;
+      box-shadow: 0 4px 12px rgba(15,23,42,0.08);
+      white-space: pre-wrap;
+    }
+    .msg-row.user .msg-bubble {
+      background: linear-gradient(135deg, #2563eb, #4f46e5);
+      color: white;
+      border-bottom-right-radius: 0.25rem;
+    }
+    .msg-row.ai .msg-bubble {
+      background: #f3f4f6;
+      color: #111827;
+      border-bottom-left-radius: 0.25rem;
+    }
+    .typing {
+      display: flex;
+      gap: 4px;
+      padding: 0.25rem 0.5rem;
+    }
+    .typing span {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #9ca3af;
+      animation: typing 1.4s infinite;
+    }
+    .typing span:nth-child(2) { animation-delay: 0.15s; }
+    .typing span:nth-child(3) { animation-delay: 0.3s; }
+    @keyframes typing {
+      0%, 60%, 100% { opacity: 0.2; transform: translateY(0); }
+      30% { opacity: 1; transform: translateY(-2px); }
+    }
+
+    .chat-input-row {
+      padding-top: 0.75rem;
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+    .chat-input {
+      flex: 1;
+      border-radius: 999px;
+      border: 1px solid #d1d5db;
+      padding: 0.65rem 1rem;
+      outline: none;
+      font-size: 0.9rem;
+    }
+    .chat-input:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 2px rgba(37,99,235,0.2);
+    }
+    .send-btn {
+      border-radius: 999px;
+      border: none;
+      padding: 0.65rem 1.1rem;
+      background: #2563eb;
+      color: white;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .send-btn:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+
+    /* RIGHT: schedules + calendar */
+    .right-panel {
+      flex: 2;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      min-width: 0;
+    }
+    .schedule-switcher,
+    .calendar-card {
+      background: white;
+      border-radius: 1rem;
+      padding: 1rem;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+    }
+    .schedule-switcher-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+    .schedule-tabs {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .schedule-tab {
+      border-radius: 999px;
+      padding: 0.35rem 0.8rem;
+      border: 1px solid #d1d5db;
+      background: #f9fafb;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+    .schedule-tab.active {
+      background: #111827;
+      color: white;
+      border-color: #111827;
+    }
+    .schedule-meta {
+      font-size: 0.8rem;
+      color: #6b7280;
+    }
+    .calendar-card h2 {
+      font-size: 0.95rem;
+      margin-bottom: 0.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+    .calendar-legend {
+      font-size: 0.7rem;
+      color: #9ca3af;
+    }
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    .calendar-day-col {
+      background: #f9fafb;
+      border-radius: 0.75rem;
+      padding: 0.5rem;
+      min-height: 140px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .calendar-day-title {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #4b5563;
+      margin-bottom: 0.25rem;
+    }
+    .class-pill {
+      background: white;
+      border-radius: 0.6rem;
+      border: 1px solid #e5e7eb;
+      padding: 0.35rem 0.45rem;
+      font-size: 0.7rem;
+      line-height: 1.3;
+    }
+    .class-pill-code {
+      font-weight: 600;
+      color: #111827;
+    }
+    .class-pill-time {
+      color: #4b5563;
+      margin-top: 0.1rem;
+    }
+    .class-pill-loc {
+      color: #9ca3af;
+    }
+
+    footer {
+      padding: 0.8rem 1.5rem;
+      font-size: 0.75rem;
+      color: #6b7280;
+      text-align: center;
+    }
+
+    @media (max-width: 900px) {
+      .main-layout {
+        flex-direction: column;
+      }
+      .chat-panel, .right-panel {
+        width: 100%;
+      }
+      .calendar-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 600px) {
+      header { flex-direction: column; align-items: flex-start; gap: 0.25rem; }
+      .calendar-grid { grid-template-columns: repeat(1, 1fr); }
+    }
+  </style>
 </head>
 <body>
-    <div class="top-header">
-        <h1>Emory Schedule Builder</h1>
-    </div>
-    
-    <div class="app">
-        <div class="chat-panel">
-            <div class="chat-header"><h2>AI Assistant</h2></div>
-            <div class="chat-messages" id="chatMessages"></div>
-            <form class="chat-input-form" id="chatForm">
-                <input type="text" id="chatInput" class="chat-input" placeholder="Ask about courses or schedules...">
-                <button type="submit" class="send-button" id="sendButton">Send</button>
-            </form>
+<div id="root"></div>
+
+<script type="text/babel">
+  const { useState, useEffect } = React;
+
+  // ================== CONFIG ==================
+  const API_URL = "https://1f9bwuukqi.execute-api.us-east-1.amazonaws.com/default/emory-schedule-builder-api-API"; // <-- change this
+
+  // Initial dummy schedules – you can edit these or load from backend
+  const INITIAL_SCHEDULES = [
+    {
+      id: 1,
+      name: "Schedule 1",
+      classes: [
+        {
+          id: "c1",
+          courseCode: "ISOM 351",
+          courseName: "Business Data Analytics",
+          day: "Mon",
+          startTime: "10:00",
+          endTime: "11:15",
+          location: "Goizueta Wxxxx"
+        },
+        {
+          id: "c2",
+          courseCode: "MKT 347",
+          courseName: "Product & Brand Mgt",
+          day: "Wed",
+          startTime: "13:00",
+          endTime: "14:15",
+          location: "Goizueta Sxxx"
+        }
+      ]
+    },
+    {
+      id: 2,
+      name: "Schedule 2",
+      classes: [
+        {
+          id: "c3",
+          courseCode: "ISOM 355",
+          courseName: "Project Management",
+          day: "Tue",
+          startTime: "09:00",
+          endTime: "10:15",
+          location: "Goizueta Nxxx"
+        }
+      ]
+    },
+    {
+      id: 3,
+      name: "Schedule 3",
+      classes: []
+    }
+  ];
+
+  const WEEK_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+
+  // Simple markdown-ish bold formatter (same pattern as PMory)
+  const formatMessageText = (text) => {
+    const lines = text.split("\n");
+    return lines.map((line, lineIndex) => {
+      const parts = line.split(/(\*\*[^*]+\*\*)/g);
+      const formattedLine = parts.map((part, partIndex) => {
+        if (part.startsWith("**") && part.endsWith("**")) {
+          return (
+            <strong key={partIndex}>{part.slice(2, -2)}</strong>
+          );
+        }
+        return part;
+      });
+      return (
+        <span key={lineIndex}>
+          {formattedLine}
+          {lineIndex < lines.length - 1 && <br />}
+        </span>
+      );
+    });
+  };
+
+  const ChatPanel = ({ schedules, activeScheduleId, setSchedules }) => {
+    const [messages, setMessages] = useState([
+      {
+        type: "ai",
+        content:
+          "Hi! I'm your Emory course planning assistant. Tell me your major, past courses, and how many semesters you have left, and I'll help you build schedules. You can also say things like “add ISOM 351 to Schedule 2.”"
+      }
+    ]);
+    const [inputValue, setInputValue] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleSend = async () => {
+      if (!inputValue.trim() || isLoading) return;
+
+      const userMessage = { type: "user", content: inputValue };
+      const currentInput = inputValue;
+      setMessages((prev) => [...prev, userMessage]);
+      setInputValue("");
+      setIsLoading(true);
+
+      try {
+        const payload = {
+          message: currentInput,
+          activeScheduleId,
+          schedules
+        };
+
+        const headers = {
+          "Content-Type": "application/json"
+        };
+        if (API_KEY) {
+          headers["x-api-key"] = API_KEY;
+        }
+
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers,
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+          throw new Error("HTTP " + res.status);
+        }
+
+        const data = await res.json();
+        /*
+          EXPECTED BACKEND RESPONSE SHAPE (you can implement this in Lambda):
+
+          {
+            reply: "string to show in chat",
+            updatedSchedules: [ ...optional full schedules array... ]
+          }
+        */
+        const replyText =
+          data.reply ||
+          data.response ||
+          "I generated a response, but something looks off in the payload.";
+
+        setMessages((prev) => [
+          ...prev,
+          { type: "ai", content: replyText }
+        ]);
+
+        if (data.updatedSchedules) {
+          setSchedules(data.updatedSchedules);
+        }
+      } catch (err) {
+        console.error(err);
+        setMessages((prev) => [
+          ...prev,
+          {
+            type: "ai",
+            content:
+              "Sorry, I couldn't reach the course-planning backend. Check your API URL / CORS and try again."
+          }
+        ]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    const handleKeyPress = (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        handleSend();
+      }
+    };
+
+    return (
+      <div className="chat-panel">
+        <div className="chat-header">
+          <div className="chat-header-title">Course Planner Assistant</div>
+          <div className="chat-header-subtitle">
+            Ask about ISOM / MKT classes, workload balance, or tell me how to
+            update your schedules.
+          </div>
         </div>
-        <div class="schedule-panel">
-            <div class="schedule-header">
-                <button class="nav-button" id="prevBtn">←</button>
-                <h2 class="schedule-title" id="scheduleTitle">Schedule #1</h2>
-                <button class="nav-button" id="nextBtn">→</button>
+
+        <div className="chat-messages">
+          {messages.map((m, idx) => (
+            <div key={idx} className={`msg-row ${m.type}`}>
+              <div className="msg-label">
+                {m.type === "user" ? "You" : "Assistant"}
+              </div>
+              <div className="msg-bubble">
+                {typeof m.content === "string"
+                  ? formatMessageText(m.content)
+                  : m.content}
+              </div>
             </div>
-            <div class="calendar-view">
-                <div class="calendar-grid" id="calendar"></div>
+          ))}
+          {isLoading && (
+            <div className="msg-row ai">
+              <div className="msg-label">Assistant</div>
+              <div className="msg-bubble">
+                <div className="typing">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+              </div>
             </div>
+          )}
         </div>
-    </div>
-    <script>
-        const API_URL = 'https://1f9bwuukqi.execute-api.us-east-1.amazonaws.com/emory-schedule-builder-api';
-        const schedules = [
-            {
-                id: 1, name: 'Schedule #1',
-                classes: [
-                    { id: 'c1', courseCode: 'ISOM 351', courseName: 'Business Data Analytics', day: 'Tue', startTime: '10:00', endTime: '11:15' },
-                    { id: 'c2', courseCode: 'ISOM 351', courseName: 'Business Data Analytics', day: 'Thu', startTime: '10:00', endTime: '11:15' },
-                    { id: 'c3', courseCode: 'MKT 310', courseName: 'Consumer Insights', day: 'Mon', startTime: '13:00', endTime: '14:15' },
-                    { id: 'c4', courseCode: 'MKT 310', courseName: 'Consumer Insights', day: 'Wed', startTime: '13:00', endTime: '14:15' }
-                ]
-            },
-            {
-                id: 2, name: 'Schedule #2',
-                classes: [
-                    { id: 'c5', courseCode: 'FIN 240', courseName: 'Corporate Valuation', day: 'Tue', startTime: '14:30', endTime: '15:45' },
-                    { id: 'c6', courseCode: 'FIN 240', courseName: 'Corporate Valuation', day: 'Thu', startTime: '14:30', endTime: '15:45' },
-                    { id: 'c7', courseCode: 'ISOM 351', courseName: 'Business Data Analytics', day: 'Mon', startTime: '09:00', endTime: '10:15' }
-                ]
-            },
-            {
-                id: 3, name: 'Schedule #3',
-                classes: [
-                    { id: 'c8', courseCode: 'MKT 310', courseName: 'Consumer Insights', day: 'Tue', startTime: '11:30', endTime: '12:45' },
-                    { id: 'c9', courseCode: 'FIN 240', courseName: 'Corporate Valuation', day: 'Wed', startTime: '09:00', endTime: '10:15' },
-                    { id: 'c10', courseCode: 'FIN 240', courseName: 'Corporate Valuation', day: 'Fri', startTime: '09:00', endTime: '10:15' }
-                ]
-            }
-        ];
-        const messages = [{ id: '1', role: 'assistant', content: "Hello! I'm your Emory course planning assistant. What would you like to know?" }];
-        const timeSlots = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
-        const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
-        let currentScheduleIndex = 0;
-        function formatTime(time) {
-            const [hours, minutes] = time.split(':');
-            const hour = parseInt(hours);
-            const ampm = hour >= 12 ? 'PM' : 'AM';
-            const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
-            return `${displayHour}:${minutes} ${ampm}`;
-        }
-        function getClassesForSlot(schedule, day, timeSlot) {
-            return schedule.classes.filter(c => {
-                if (c.day !== day) return false;
-                const slotHour = parseInt(timeSlot.split(':')[0]);
-                const classStartHour = parseInt(c.startTime.split(':')[0]);
-                const classEndHour = parseInt(c.endTime.split(':')[0]);
-                return classStartHour <= slotHour && slotHour < classEndHour;
-            });
-        }
-        function renderCalendar() {
-            const calendar = document.getElementById('calendar');
-            calendar.innerHTML = '<div class="calendar-header-cell">Time</div>';
-            days.forEach(day => calendar.innerHTML += `<div class="calendar-header-cell">${day}</div>`);
-            const currentSchedule = schedules[currentScheduleIndex];
-            timeSlots.forEach(timeSlot => {
-                calendar.innerHTML += `<div class="time-cell">${formatTime(timeSlot)}</div>`;
-                days.forEach(day => {
-                    const classes = getClassesForSlot(currentSchedule, day, timeSlot);
-                    let cellContent = '';
-                    classes.forEach(c => {
-                        cellContent += `<div class="class-block"><div class="class-code">${c.courseCode}</div><div class="class-name">${c.courseName}</div><div class="class-time">${formatTime(c.startTime)} - ${formatTime(c.endTime)}</div></div>`;
-                    });
-                    calendar.innerHTML += `<div class="calendar-cell">${cellContent}</div>`;
-                });
-            });
-            document.getElementById('scheduleTitle').textContent = currentSchedule.name;
-        }
-        function renderMessages() {
-            const chatMessages = document.getElementById('chatMessages');
-            chatMessages.innerHTML = messages.map(msg => `<div class="message ${msg.role}"><div class="message-bubble ${msg.loading ? 'loading' : ''}">${msg.content}</div></div>`).join('');
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-        function addMessage(role, content, loading = false) {
-            messages.push({ id: Date.now().toString(), role, content, loading });
-            renderMessages();
-        }
-        function applyScheduleAction(action) {
-            const scheduleIndex = schedules.findIndex(s => s.id === action.scheduleId);
-            if (scheduleIndex === -1) return;
-            const schedule = schedules[scheduleIndex];
-            if (action.action === 'add_class' && action.courseCode && action.courseName && action.day && action.startTime && action.endTime) {
-                schedule.classes.push({ id: `c${Date.now()}`, courseCode: action.courseCode, courseName: action.courseName, day: action.day, startTime: action.startTime, endTime: action.endTime });
-                renderCalendar();
-            } else if (action.action === 'remove_class' && action.courseCode) {
-                schedule.classes = schedule.classes.filter(c => c.courseCode !== action.courseCode);
-                renderCalendar();
-            }
-        }
-        document.getElementById('chatForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const input = document.getElementById('chatInput');
-            const message = input.value.trim();
-            if (!message) return;
-            const sendButton = document.getElementById('sendButton');
-            sendButton.disabled = true;
-            addMessage('user', message);
-            input.value = '';
-            addMessage('assistant', 'Thinking...', true);
-            try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message, currentSchedule: schedules[currentScheduleIndex] })
-                });
-                if (!response.ok) throw new Error('Network error');
-                const data = await response.json();
-                messages.pop();
-                addMessage('assistant', data.response);
-                if (data.action) applyScheduleAction(data.action);
-            } catch (error) {
-                messages.pop();
-                addMessage('assistant', 'Sorry, I encountered an error. Please try again.');
-                console.error('Error:', error);
-            } finally {
-                sendButton.disabled = false;
-            }
-        });
-        document.getElementById('prevBtn').addEventListener('click', () => {
-            currentScheduleIndex = currentScheduleIndex > 0 ? currentScheduleIndex - 1 : schedules.length - 1;
-            renderCalendar();
-        });
-        document.getElementById('nextBtn').addEventListener('click', () => {
-            currentScheduleIndex = currentScheduleIndex < schedules.length - 1 ? currentScheduleIndex + 1 : 0;
-            renderCalendar();
-        });
-        renderMessages();
-        renderCalendar();
-    </script>
+
+        <div className="chat-input-row">
+          <input
+            className="chat-input"
+            placeholder='Example: "I’m an ISOM + Marketing double major with 1 semester left"'
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyPress={handleKeyPress}
+          />
+          <button
+            className="send-btn"
+            onClick={handleSend}
+            disabled={isLoading}
+          >
+            <span>Send</span>
+            <span>➤</span>
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const ScheduleSwitcher = ({
+    schedules,
+    activeScheduleId,
+    setActiveScheduleId
+  }) => {
+    const activeSchedule =
+      schedules.find((s) => s.id === activeScheduleId) || schedules[0];
+
+    return (
+      <div className="schedule-switcher">
+        <div className="schedule-switcher-header">
+          <div>
+            <div style={{ fontSize: "0.9rem", fontWeight: 600 }}>
+              Saved Schedules
+            </div>
+            <div className="schedule-meta">
+              You can say things like “add ISOM 351 to Schedule 3.”
+            </div>
+          </div>
+        </div>
+        <div className="schedule-tabs">
+          {schedules.map((s) => (
+            <button
+              key={s.id}
+              className={
+                "schedule-tab " +
+                (s.id === activeScheduleId ? "active" : "")
+              }
+              onClick={() => setActiveScheduleId(s.id)}
+            >
+              {s.name}
+            </button>
+          ))}
+        </div>
+        <div style={{ marginTop: "0.75rem", fontSize: "0.8rem" }}>
+          <strong>Active:</strong> {activeSchedule?.name} (
+          {activeSchedule?.classes.length || 0} classes)
+        </div>
+      </div>
+    );
+  };
+
+  const CalendarView = ({ schedules, activeScheduleId }) => {
+    const activeSchedule =
+      schedules.find((s) => s.id === activeScheduleId) || schedules[0];
+
+    const classesByDay = WEEK_DAYS.reduce((acc, day) => {
+      acc[day] = (activeSchedule?.classes || []).filter(
+        (c) => c.day === day
+      );
+      return acc;
+    }, {});
+
+    return (
+      <div className="calendar-card">
+        <h2>
+          Weekly Calendar
+          <span className="calendar-legend">
+            Static view – updates when schedule changes
+          </span>
+        </h2>
+        <div className="calendar-grid">
+          {WEEK_DAYS.map((day) => (
+            <div key={day} className="calendar-day-col">
+              <div className="calendar-day-title">{day}</div>
+              {classesByDay[day].length === 0 && (
+                <div style={{ fontSize: "0.7rem", color: "#9ca3af" }}>
+                  No classes
+                </div>
+              )}
+              {classesByDay[day].map((cls) => (
+                <div key={cls.id} className="class-pill">
+                  <div className="class-pill-code">
+                    {cls.courseCode} • {cls.courseName}
+                  </div>
+                  <div className="class-pill-time">
+                    {cls.startTime}–{cls.endTime}
+                  </div>
+                  <div className="class-pill-loc">
+                    {cls.location || "TBA"}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  const App = () => {
+    const [schedules, setSchedules] = useState(INITIAL_SCHEDULES);
+    const [activeScheduleId, setActiveScheduleId] = useState(1);
+
+    return (
+      <div className="app-root">
+        <header>
+          <div>
+            <h1>
+              <span className="logo-dot" />
+              Emory Course Planner
+            </h1>
+            <div className="header-subtitle">
+              ISOM / Marketing focused schedule helper with AI assistant
+            </div>
+          </div>
+        </header>
+
+        <main className="main-layout">
+          <ChatPanel
+            schedules={schedules}
+            activeScheduleId={activeScheduleId}
+            setSchedules={setSchedules}
+          />
+
+          <div className="right-panel">
+            <ScheduleSwitcher
+              schedules={schedules}
+              activeScheduleId={activeScheduleId}
+              setActiveScheduleId={setActiveScheduleId}
+            />
+            <CalendarView
+              schedules={schedules}
+              activeScheduleId={activeScheduleId}
+            />
+          </div>
+        </main>
+
+        <footer>© 2025 Emory Course Planner • Built by Martin</footer>
+      </div>
+    );
+  };
+
+  ReactDOM.render(<App />, document.getElementById("root"));
+</script>
 </body>
 </html>
